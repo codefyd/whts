@@ -4,8 +4,8 @@
 
 // Replace these with your actual Supabase project values
 // These are PUBLIC keys - safe to expose in frontend
-const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co';
-const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
+const SUPABASE_URL = 'https://uqzauvennlrcqoqnvthy.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_Spzme0_9-eQzY5t6Xnbfqg_lHEU1trl';
 
 // Initialize Supabase client using CDN version
 const { createClient } = supabase;

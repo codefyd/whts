@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>الحملات - منصة واتساب</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <div class="main-content">
+
+    <header class="page-header">
+      <button class="hamburger-btn btn-ghost" id="hamburger-btn">☰</button>
+      <h1>📣 الحملات</h1>
+      <button class="btn btn-primary btn-sm" id="btn-new-campaign">➕ حملة جديدة</button>
+    </header>
+
+    <main class="page-body">
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon blue">📣</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-total">—</div>
+            <div class="stat-label">إجمالي الحملات</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">✅</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-completed">—</div>
+            <div class="stat-label">مكتملة</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange">🚀</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-active">—</div>
+            <div class="stat-label">نشطة</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon gray">📝</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-draft">—</div>
+            <div class="stat-label">مسودات</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- List -->
+      <div class="card">
+        <div class="card-header">
+          <h2>قائمة الحملات</h2>
+        </div>
+
+        <div id="loading-state" class="loading-overlay">
+          <div class="loading-spinner"></div>
+          <span>جارٍ التحميل...</span>
+        </div>
+
+        <div id="empty-state" class="empty-state hidden">
+          <div class="empty-icon">📣</div>
+          <p>لا توجد حملات بعد</p>
+          <button class="btn btn-primary" id="btn-add-first">إنشاء أول حملة</button>
+        </div>
+
+        <div id="campaigns-list" class="hidden" style="padding:16px;display:flex;flex-direction:column;gap:12px;"></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ============ NEW CAMPAIGN MODAL ============ -->
+<div class="modal-overlay hidden" id="campaign-modal">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-header">
+      <span>📣</span>
+      <h3>إنشاء حملة جديدة</h3>
+      <button class="btn btn-ghost btn-icon" id="modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="campaign-name">اسم الحملة *</label>
+          <input type="text" id="campaign-name" class="form-control" placeholder="مثال: عرض رمضان 2024" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="template-name">اسم القالب (Template Name) *</label>
+          <input type="text" id="template-name" class="form-control" placeholder="hello_world" dir="ltr" />
+          <span class="form-hint">من Meta → WhatsApp → Message Templates</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="template-lang">لغة القالب</label>
+        <select id="template-lang" class="form-control">
+          <option value="ar">العربية (ar)</option>
+          <option value="en_US">الإنجليزية (en_US)</option>
+          <option value="en">English (en)</option>
+        </select>
+      </div>
+
+      <!-- Audience -->
+      <div class="form-group">
+        <label class="form-label">الجمهور المستهدف *</label>
+        <div class="audience-options">
+          <div class="audience-option selected" data-type="all" onclick="selectAudience('all', this)">
+            <div class="aud-icon">👥</div>
+            جميع جهات الاتصال
+          </div>
+          <div class="audience-option" data-type="tag" onclick="selectAudience('tag', this)">
+            <div class="aud-icon">🏷️</div>
+            حسب وسم
+          </div>
+          <div class="audience-option" data-type="manual" onclick="selectAudience('manual', this)">
+            <div class="aud-icon">✋</div>
+            اختيار يدوي
+          </div>
+        </div>
+
+        <!-- Tag selector -->
+        <div id="tag-selector" class="hidden">
+          <label class="form-label">الوسم</label>
+          <select id="audience-tag" class="form-control">
+            <option value="">-- اختر وسمًا --</option>
+          </select>
+        </div>
+
+        <!-- Manual selector -->
+        <div id="manual-selector" class="hidden">
+          <label class="form-label">اختر جهات الاتصال</label>
+          <div id="contacts-checklist" style="max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px;"></div>
+        </div>
+      </div>
+
+      <!-- Preview -->
+      <div class="alert alert-info" id="audience-preview">
+        <span>👥</span>
+        <span id="audience-preview-text">سيتم الإرسال لجميع جهات الاتصال المشتركة</span>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" id="btn-launch-campaign">🚀 إطلاق الحملة</button>
+      <button class="btn btn-secondary" id="btn-save-draft">💾 حفظ كمسودة</button>
+      <button class="btn btn-ghost" id="btn-cancel">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/sidebar.js"></script>
+<script src="assets/js/campaigns.js"></script>
+</body>
+</html>

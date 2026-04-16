@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>تسجيل الدخول - منصة واتساب</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="login-page">
+
+  <div class="login-card">
+    <div class="login-logo">💬</div>
+    <h1>منصة واتساب</h1>
+    <p class="subtitle">لوحة التحكم الشخصية</p>
+
+    <div id="error-alert" class="alert alert-error hidden">
+      <span>⚠️</span>
+      <span id="error-msg"></span>
+    </div>
+
+    <div class="form-group" style="text-align:right;">
+      <label class="form-label" for="email">البريد الإلكتروني</label>
+      <input
+        type="email"
+        id="email"
+        class="form-control"
+        placeholder="your@email.com"
+        dir="ltr"
+        autocomplete="email"
+      />
+    </div>
+
+    <div class="form-group" style="text-align:right;">
+      <label class="form-label" for="password">كلمة المرور</label>
+      <input
+        type="password"
+        id="password"
+        class="form-control"
+        placeholder="••••••••"
+        dir="ltr"
+        autocomplete="current-password"
+      />
+    </div>
+
+    <button id="btn-login" class="btn btn-primary btn-block btn-lg" style="margin-top:8px;">
+      تسجيل الدخول
+    </button>
+
+    <p class="text-sm text-muted" style="margin-top:20px;">
+      تطبيق شخصي — للمستخدم الموثوق فقط
+    </p>
+  </div>
+
+  <script src="assets/js/supabase-client.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script>
+    // Redirect if already logged in
+    AUTH.redirectIfAuth();
+
+    const emailInput = document.getElementById('email');
+    const passInput  = document.getElementById('password');
+    const loginBtn   = document.getElementById('btn-login');
+    const errorAlert = document.getElementById('error-alert');
+    const errorMsg   = document.getElementById('error-msg');
+
+    function showError(msg) {
+      errorMsg.textContent = msg;
+      errorAlert.classList.remove('hidden');
+    }
+
+    function hideError() {
+      errorAlert.classList.add('hidden');
+    }
+
+    loginBtn.addEventListener('click', async () => {
+      hideError();
+      const email    = emailInput.value.trim();
+      const password = passInput.value;
+
+      if (!email || !password) {
+        showError('يرجى تعبئة جميع الحقول');
+        return;
+      }
+
+      setLoading('btn-login', true, 'جارٍ الدخول...');
+
+      try {
+        await AUTH.signIn(email, password);
+        window.location.href = 'contacts.html';
+      } catch (err) {
+        showError(err.message === 'Invalid login credentials'
+          ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة'
+          : err.message
+        );
+        setLoading('btn-login', false);
+      }
+    });
+
+    // Allow Enter key
+    [emailInput, passInput].forEach(el => {
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') loginBtn.click();
+      });
+    });
+  </script>
+</body>
+</html>
